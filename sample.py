@@ -37,10 +37,15 @@ def readcsv_multi(file_list, n):
     '''ファイルリストのcsv読み込み（並列処理）
     '''
     p = Pool(os.cpu_count())
-    if n == 1:
-        df = pd.concat(p.map(pdreadcsv1, file_list))
-    elif n == 2:
-        df = pd.concat(p.map(pdreadcsv2, file_list))
+    # if n == 1:
+    #     df = pd.concat(p.map(pdreadcsv1, file_list))
+    # elif n == 2:
+    #     df = pd.concat(p.map(pdreadcsv2, file_list))
+    df = (pd.concat(p.map(exec("pdreadcsv"+str(n)), file_list)))
+
+    # for n in range(3):
+    #     print(exec("name%d = %d" % (n, 100 + n)))
+
     p.close()
     return df
 
@@ -81,8 +86,9 @@ def main():
         if len(file_list) != 0:
             df_1to1K = readcsv_multi(file_list, 1)
             df_1to1K['DATE'] = df_1to1K.TIMESTAMP.dt.strftime('%Y-%m-01')
+            df_1to1K.reset_index(drop=True,inplace=True)
             df_serial = df_1to1K.loc[df_1to1K.groupby(['DEVICE_ID','DATE'])['TIMESTAMP'].idxmin(),:]
-            print(file_list)
+            print(df_serial)
         # JAMデータの読み込み
         file_list = serch_file(device_list, 2)
         if len(file_list) != 0:
@@ -113,7 +119,6 @@ def main():
         # 集計データの結合
         #df_agg_merge =
 
-
     print(df_merge)
 
     # csv出力
@@ -122,3 +127,4 @@ def main():
         
 if __name__ == '__main__':
     main()
+    
